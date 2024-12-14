@@ -1,25 +1,37 @@
 // AuthContext.js
 import React, { createContext, useState, useEffect } from 'react';
-import { auth, db } from '../../firebase.config'; // Assuming you already have firebase configured
-import { onAuthStateChanged } from 'firebase/auth';
+
 
 export const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
-  const [user, setUser] = useState(null);
+  const [token, setToken] = useState(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
-      setUser(currentUser); // Set the user to the current authenticated user
-      setLoading(false);
-    });
-
-    return () => unsubscribe(); // Clean up the listener when the component unmounts
+    const fetchToken= async ()=>{
+      try{
+        const response = await fetch('https://dhhbackend.onrender.com/spotify-token')
+        if(!response.ok){
+          throw new Error ('failed to fetch')
+        }else{
+          const data = await response.json();
+          setToken(data.accessToken)
+        }
+      }
+      catch(error){
+          console.log(error)
+      }
+      finally{
+        setLoading(false)
+      }
+    }
+    
+   fetchToken()
   }, []);
 
   return (
-    <AuthContext.Provider value={{ user, loading }}>
+    <AuthContext.Provider value={{ token, loading }}>
       {children}
     </AuthContext.Provider>
   );
